@@ -1,54 +1,202 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import {useState, useEffect} from 'react';
+import {Link, useNavigate} from 'react-router-dom';
+import {signInWithEmailAndPassword} from 'firebase/auth';
+import {auth} from '@/lib/firebase';
 
-export const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login } = useAuth();
-  const navigate = useNavigate();
+const FOTOS = [
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80',
+    'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80',
+    'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&q=80',
+    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80',
+    'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=1200&q=80',
+];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Aquí iría lo del backend
-    // Simula un login correcto con cualquier cosa, solo con que llene los campos 
-    login({ nombre: 'Usuario Prueba', email });
-    
-    navigate('/dashboard'); 
-  };
+export default function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [fotoActual, setFotoActual] = useState(0);
+    const [fotoSiguiente, setFotoSiguiente] = useState(1);
+    const [transitioning, setTransitioning] = useState(false);
+    const navigate = useNavigate();
 
-  return (
-    <div>
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input 
-            type="email" 
-            id="email"
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-          />
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTransitioning(true);
+            setTimeout(() => {
+                setFotoActual(prev => (prev + 1) % FOTOS.length);
+                setFotoSiguiente(prev => (prev + 1) % FOTOS.length);
+                setTransitioning(false);
+            }, 1000);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            navigate('/');
+        } catch {
+            setError('Email o contraseña incorrectos.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex">
+
+            <div className="hidden md:flex flex-1 flex-col justify-between px-14 py-12 relative overflow-hidden">
+
+                <div
+                    className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                    style={{
+                        backgroundImage: `url(${FOTOS[fotoActual]})`,
+                        opacity: transitioning ? 0 : 1,
+                    }}
+                />
+                <div
+                    className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                    style={{
+                        backgroundImage: `url(${FOTOS[fotoSiguiente]})`,
+                        opacity: transitioning ? 1 : 0,
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/50 to-stone-950/30"/>
+
+                <p className="font-serif text-2xl font-semibold tracking-wide text-amber-200/90 relative z-10">
+                    Mise
+                </p>
+
+                <div className="relative z-10">
+                    <h1 className="font-serif text-5xl font-bold leading-tight mb-5 text-stone-100">
+                        Tu cocina,<br/>
+                        <span className="italic text-amber-400/90">elevada</span>
+                    </h1>
+                    <p className="text-stone-300 text-base leading-relaxed max-w-sm font-light">
+                        Recetas de chefs profesionales, sugerencias con IA y sesiones personalizadas — todo en un solo
+                        lugar.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-4 relative z-10">
+                    {[
+                        'Catálogo curado por chefs profesionales',
+                        'Sugeridor IA con tus ingredientes disponibles',
+                        'Chat y sesiones personalizadas con chefs',
+                    ].map(f => (
+                        <div key={f} className="flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0"/>
+                            <span className="text-stone-300 text-sm font-light">{f}</span>
+                        </div>
+                    ))}
+                    <div className="flex gap-2 mt-2">
+                        {FOTOS.map((_, i) => (
+                            <div
+                                key={i}
+                                className={`h-0.5 rounded-full transition-all duration-500 ${
+                                    i === fotoActual ? 'w-6 bg-amber-400' : 'w-2 bg-stone-600'
+                                }`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 md:flex-none md:w-[480px]
+        bg-stone-50 dark:bg-stone-900
+        flex items-center justify-center px-8 py-16">
+
+                <div className="w-full max-w-sm
+          bg-white dark:bg-stone-800
+          border border-stone-200 dark:border-stone-700
+          rounded-2xl px-9 py-10">
+
+                    <p className="text-xs font-medium tracking-widest uppercase text-amber-600 dark:text-amber-400 mb-3">
+                        Bienvenido de vuelta
+                    </p>
+                    <h2 className="font-serif text-3xl font-bold text-stone-900 dark:text-stone-50 mb-1">
+                        Iniciar sesión
+                    </h2>
+                    <p className="text-stone-400 dark:text-stone-500 text-sm mb-8">
+                        Ingresa tus datos para continuar
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <div>
+                            <label
+                                className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2">
+                                Correo electrónico
+                            </label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                                placeholder="tu@correo.com"
+                                className="w-full px-4 py-3 rounded-xl text-sm
+                  bg-stone-50 dark:bg-stone-900
+                  border border-stone-200 dark:border-stone-700
+                  text-stone-900 dark:text-stone-100
+                  placeholder:text-stone-300 dark:placeholder:text-stone-600
+                  outline-none focus:border-amber-500 dark:focus:border-amber-500
+                  transition-colors"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                className="block text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500 mb-2">
+                                Contraseña
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                required
+                                placeholder="••••••••"
+                                className="w-full px-4 py-3 rounded-xl text-sm
+                  bg-stone-50 dark:bg-stone-900
+                  border border-stone-200 dark:border-stone-700
+                  text-stone-900 dark:text-stone-100
+                  placeholder:text-stone-300 dark:placeholder:text-stone-600
+                  outline-none focus:border-amber-500 dark:focus:border-amber-500
+                  transition-colors"
+                            />
+                        </div>
+
+                        {error && (
+                            <p className="text-red-500 dark:text-red-400 text-xs">{error}</p>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="mt-1 w-full py-3 rounded-xl text-sm font-medium
+                bg-stone-900 dark:bg-stone-100
+                text-amber-200 dark:text-stone-900
+                hover:bg-stone-800 dark:hover:bg-stone-200
+                transition-colors disabled:opacity-50"
+                        >
+                            {loading ? 'Cargando...' : 'Iniciar sesión'}
+                        </button>
+                    </form>
+
+                    <p className="text-center text-xs text-stone-400 dark:text-stone-500 mt-7">
+                        ¿No tienes cuenta?{' '}
+                        <Link
+                            to="/registro"
+                            className="text-amber-600 dark:text-amber-400 font-medium hover:underline"
+                        >
+                            Regístrate gratis
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input 
-            type="password" 
-            id="password"
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-          />
-        </div>
-
-        <button type="submit">Entrar</button>
-
-        <div>
-          <p>¿No tienes cuenta? <Link to="/registro">Regístrate aquí</Link></p>
-        </div>
-      </form>
-    </div>
-  );
-};
+    );
+}
