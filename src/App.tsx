@@ -4,6 +4,7 @@ import Login from '@/pages/login/Login';
 import Registro from '@/pages/login/Registro';
 import PremiumRoute from '@/components/layout/PremiumRoute';
 import ChefRoute from '@/components/layout/ChefRoute';
+import { RecetaDetalle } from '@/pages/recipe-detail/RecetasDetalle';
 
 function App() {
     return (
@@ -16,7 +17,7 @@ function App() {
                 <Route path="/" element={<div className="p-4">Home</div>}/>
                 <Route path="/categorias" element={<div className="p-4">Categorías</div>}/>
                 <Route path="/categoria/:id" element={<div className="p-4">Categoría</div>}/>
-                <Route path="/receta/:id" element={<div className="p-4">Detalle receta</div>}/>
+                <Route path="/receta/:id" element={<RecetaDetalle/>}/>
                 <Route path="/suscripcion" element={<div className="p-4">Suscripción</div>}/>
 
                 {/* Premium */}
