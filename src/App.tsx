@@ -4,8 +4,8 @@ import Login from '@/pages/login/Login';
 import Registro from '@/pages/login/Registro';
 import PremiumRoute from '@/components/layout/PremiumRoute';
 import ChefRoute from '@/components/layout/ChefRoute';
-import { RecetaDetalle } from '@/pages/recipe-detail/RecetasDetalle';
 import Home from '@/pages/home/Home';
+import RecetaDetalle from './pages/recipe-detail/RecetasDetalle';
 
 function App() {
     return (
