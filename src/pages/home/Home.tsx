@@ -159,7 +159,7 @@ export default function Home() {
                 >
                     Ver planes →
                 </Link>
-            </div>|
+            </div>
 
         </div>
     );
