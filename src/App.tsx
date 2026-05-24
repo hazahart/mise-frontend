@@ -11,6 +11,8 @@ import SubscriptionSuccess from '@/pages/subscription/SubscriptionSuccess';
 import SubscriptionCancelled from '@/pages/subscription/SubscriptionCancelled';
 import RecetasDelDia from '@/pages/premium/RecetasDelDia';
 import SugeridorIA from './pages/premium/SugeridorIA';
+import SeleccionarChef from './pages/premium/SeleccionarChef';
+import Chat from './pages/premium/Chat';
 
 function App() {
     return (
@@ -30,7 +32,8 @@ function App() {
                 <Route element={<PremiumRoute />}>
                     <Route path="/premium/recetas-del-dia" element={<RecetasDelDia />} />
                     <Route path="/premium/sugeridor" element={<SugeridorIA />} />
-                    <Route path="/premium/chat/:chefId" element={<div className="p-4">Chat</div>} />
+                    <Route path="/premium/chat" element={<SeleccionarChef />} />
+                    <Route path="/premium/chat/:chefId" element={<Chat />} />
                     <Route path="/premium/mis-sesiones" element={<div className="p-4">Mis sesiones</div>} />
                 </Route>
 
