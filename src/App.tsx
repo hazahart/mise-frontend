@@ -9,6 +9,7 @@ import RecetaDetalle from './pages/recipe-detail/RecetasDetalle';
 import Subscription from '@/pages/subscription/Subscription';
 import SubscriptionSuccess from '@/pages/subscription/SubscriptionSuccess';
 import SubscriptionCancelled from '@/pages/subscription/SubscriptionCancelled';
+import RecetasDelDia from '@/pages/premium/RecetasDelDia';
 
 function App() {
     return (
@@ -26,7 +27,7 @@ function App() {
                 <Route path="/suscripcion/cancelado" element={<SubscriptionCancelled />} />
 
                 <Route element={<PremiumRoute />}>
-                    <Route path="/premium/recetas-del-dia" element={<div className="p-4">Recetas del día</div>} />
+                    <Route path="/premium/recetas-del-dia" element={<RecetasDelDia />} />
                     <Route path="/premium/sugeridor" element={<div className="p-4">Sugeridor IA</div>} />
                     <Route path="/premium/chat/:chefId" element={<div className="p-4">Chat</div>} />
                     <Route path="/premium/mis-sesiones" element={<div className="p-4">Mis sesiones</div>} />
