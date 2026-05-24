@@ -31,3 +31,22 @@ export interface RecetaResumen {
   totalIngredientes: number;
   creadoEn: string;
 }
+
+export interface Ingrediente {
+  nombre: string;
+  cantidad: string;
+  unidad: string;
+}
+
+export interface Paso {
+  orden: number;
+  descripcion: string;
+  tiempoMin?: number;
+}
+
+export interface Receta extends RecetaResumen {
+  descripcion: string;
+  ingredientes: Ingrediente[];
+  pasos: Paso[];
+  videoUrl?: string;
+}
