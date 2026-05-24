@@ -1,41 +1,31 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase'; 
+import { api } from '../lib/api';
+import type { Receta } from '../types';
 
 export const useReceta = (id: string | undefined) => {
-  const [receta, setReceta] = useState<any>(null);
+  const [receta, setReceta] = useState<Receta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!id) return;
+
+    let cancelled = false;
+
     const fetchReceta = async () => {
-      // Si no hay ID en la URL, no hace nada
-      if (!id) return; 
-
-      setLoading(true);
-      setError(null);
-
       try {
-        // Parámetros:
-        const docRef = doc(db, 'recetas', id);
-        
-        //Realiza la consulta
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setReceta({ id: docSnap.id, ...docSnap.data() });
-        } else {
-          setError('La receta que buscas no existe.');
-        }
-      } catch (err: any) {
-        console.error("Error:", err);
-        setError('Hubo un problema al consultar la información.');
+        const data = await api.get<Receta>(`/recipes/${id}`);
+        if (!cancelled) setReceta(data);
+      } catch {
+        if (!cancelled) setError('No se pudo cargar la receta.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchReceta();
+
+    return () => { cancelled = true; };
   }, [id]);
 
   return { receta, loading, error };
