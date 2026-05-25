@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
 import Login from '@/pages/login/Login';
 import Registro from '@/pages/login/Registro';
+import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import PremiumRoute from '@/components/layout/PremiumRoute';
 import ChefRoute from '@/components/layout/ChefRoute';
 import Home from '@/pages/home/Home';
@@ -51,9 +52,12 @@ function App() {
                     <Route path="/categoria/:id" element={<Categoria />} />
                     <Route path="/receta/:id" element={<RecetaDetalle />} />
                     <Route path="/suscripcion" element={<Subscription />} />
-                    <Route path="/suscripcion/exito" element={<SubscriptionSuccess />} />
-                    <Route path="/suscripcion/cancelado" element={<SubscriptionCancelled />} />
-                    <Route path="/perfil" element={<Perfil />} />
+
+                    <Route element={<ProtectedRoute />}>
+                        <Route path="/perfil" element={<Perfil />} />
+                        <Route path="/suscripcion/exito" element={<SubscriptionSuccess />} />
+                        <Route path="/suscripcion/cancelado" element={<SubscriptionCancelled />} />
+                    </Route>
 
                     <Route element={<PremiumRoute />}>
                         <Route path="/premium/recetas-del-dia" element={<RecetasDelDia />} />
