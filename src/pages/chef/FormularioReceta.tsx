@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useAuth } from '@/context/AuthContext';
 import type { Receta, Categoria, Ingrediente, Paso } from '@/types';
-import { Plus, X, Loader2, ArrowLeft, ChefHat } from 'lucide-react';
+import { Plus, X, Loader2, ArrowLeft, ChefHat, Camera } from 'lucide-react';
 
 interface FormularioRecetaProps {
     recetaInicial?: Receta;
@@ -11,9 +14,12 @@ interface FormularioRecetaProps {
 
 export default function FormularioReceta({ recetaInicial, modo }: FormularioRecetaProps) {
     const navigate = useNavigate();
+    const { firebaseUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [uploadingImagen, setUploadingImagen] = useState(false);
+    const [imagenPreview, setImagenPreview] = useState<string | null>(recetaInicial?.imagenUrl ?? null);
 
     const [titulo, setTitulo] = useState(recetaInicial?.titulo ?? '');
     const [descripcion, setDescripcion] = useState(recetaInicial?.descripcion ?? '');
@@ -32,11 +38,28 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
 
     useEffect(() => {
         let cancelled = false;
-        api.get<{ data: Categoria[] }>('/categories')
-            .then(data => { if (!cancelled) setCategorias(data.data); })
+        api.get<Categoria[]>('/categories')
+            .then(data => { if (!cancelled) setCategorias(data); })
             .catch(() => null);
         return () => { cancelled = true; };
     }, []);
+
+    const handleImagenChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !firebaseUser) return;
+        setImagenPreview(URL.createObjectURL(file));
+        setUploadingImagen(true);
+        try {
+            const storageRef = ref(storage, `recetas/${firebaseUser.uid}/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            setImagenUrl(url);
+        } catch {
+            setError('No se pudo subir la imagen.');
+        } finally {
+            setUploadingImagen(false);
+        }
+    };
 
     const agregarIngrediente = () => {
         setIngredientes(prev => [...prev, { nombre: '', cantidad: '', unidad: '' }]);
@@ -294,14 +317,35 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                     <h2 className="font-serif text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">Multimedia</h2>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">URL de imagen</label>
-                            <input
-                                type="url"
-                                value={imagenUrl}
-                                onChange={e => setImagenUrl(e.target.value)}
-                                placeholder="https://..."
-                                className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400 dark:focus:border-amber-500"
-                            />
+                            <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Imagen de la receta</label>
+                            <div className="flex items-center gap-4">
+                                {imagenPreview ? (
+                                    <img
+                                        src={imagenPreview}
+                                        alt="Preview"
+                                        className="w-24 h-24 rounded-xl object-cover border-2 border-stone-200 dark:border-stone-700"
+                                    />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-xl bg-stone-100 dark:bg-stone-900 border-2 border-dashed border-stone-300 dark:border-stone-600 flex items-center justify-center">
+                                        <Camera className="w-6 h-6 text-stone-400" />
+                                    </div>
+                                )}
+                                <div className="flex flex-col gap-2">
+                                    <label className="flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 text-sm font-medium cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
+                                        {uploadingImagen ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                                        {imagenPreview ? 'Cambiar imagen' : 'Subir imagen'}
+                                        <input type="file" accept="image/*" onChange={handleImagenChange} className="hidden" disabled={uploadingImagen} />
+                                    </label>
+                                    {imagenPreview && (
+                                        <button
+                                            onClick={() => { setImagenPreview(null); setImagenUrl(''); }}
+                                            className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                                        >
+                                            Eliminar imagen
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">URL de video (opcional)</label>
@@ -323,7 +367,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                 </div>
             )}
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-6 mb-8">
                 <button
                     onClick={() => navigate(-1)}
                     className="flex-1 py-3 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-2xl font-medium text-sm hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors border border-stone-200 dark:border-stone-700"
@@ -332,7 +376,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                 </button>
                 <button
                     onClick={handleSubmit}
-                    disabled={loading}
+                    disabled={loading || uploadingImagen}
                     className="flex-1 py-3 bg-stone-900 dark:bg-amber-500 text-white dark:text-stone-900 rounded-2xl font-medium text-sm hover:bg-stone-800 dark:hover:bg-amber-400 transition-colors disabled:opacity-50"
                 >
                     {loading ? 'Guardando...' : modo === 'crear' ? 'Publicar receta' : 'Guardar cambios'}

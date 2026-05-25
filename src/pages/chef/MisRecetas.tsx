@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { RecetaResumen } from '@/types';
 import { ChefHat, Clock, Plus, Pencil, Trash2, Loader2, Lock } from 'lucide-react';
-import placeholderReceta from '@/assets/placeholder-recipe.jpg';
+import placeholderReceta from '@/assets/recipe/placeholder-recipe.jpg';
 
 const DIFICULTAD_ESTILOS = {
     facil: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',
