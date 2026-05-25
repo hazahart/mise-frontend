@@ -51,7 +51,7 @@ export default function SeleccionarChef() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
             <div className="mb-8">
                 <div className="flex items-center gap-2 mb-1">
                     <MessageSquare className="w-5 h-5 text-amber-500" />
@@ -73,7 +73,17 @@ export default function SeleccionarChef() {
                         className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-5 flex items-center gap-4 hover:border-amber-300 dark:hover:border-amber-700 transition-all hover:shadow-md"
                     >
                         <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-xl flex-shrink-0">
-                            {chef.nombre.charAt(0)}
+                            {chef.fotoUrl ? (
+                                <img
+                                    src={chef.fotoUrl}
+                                    alt={chef.nombre}
+                                    className="w-14 h-14 rounded-full object-cover flex-shrink-0 border-2 border-stone-200 dark:border-stone-700"
+                                />
+                            ) : (
+                                <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-xl flex-shrink-0">
+                                    {chef.nombre.charAt(0)}
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-semibold text-stone-900 dark:text-stone-100">{chef.nombre}</p>

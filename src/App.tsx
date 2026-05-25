@@ -15,6 +15,8 @@ import Chat from '@/pages/premium/Chat';
 import SeleccionarChef from '@/pages/premium/SeleccionarChef';
 import Onboarding from '@/pages/onboarding/Onboarding';
 import { useAuth } from '@/context/AuthContext';
+import MisChats from './pages/chef/MisChats';
+import ChatChef from './pages/chef/ChatChef';
 
 function OnboardingGuard() {
     const { usuario, loading } = useAuth();
@@ -52,6 +54,8 @@ function App() {
                         <Route path="/chef/mis-recetas" element={<div className="p-4">Mis recetas</div>} />
                         <Route path="/chef/nueva-receta" element={<div className="p-4">Nueva receta</div>} />
                         <Route path="/chef/editar/:id" element={<div className="p-4">Editar receta</div>} />
+                        <Route path="/chef/mis-chats" element={<MisChats />} />
+                        <Route path="/chef/chat/:chatId" element={<ChatChef />} />
                     </Route>
                 </Route>
             </Route>
