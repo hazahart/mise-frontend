@@ -7,6 +7,7 @@ export interface Usuario {
   suscripcionActiva: boolean;
   suscripcionExpira: string | null;
   stripeCustomerId: string | null;
+  onboardingCompletado: boolean;
 }
 
 export interface Categoria {
