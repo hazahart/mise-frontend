@@ -40,7 +40,6 @@ export default function Agendar() {
 
     useEffect(() => {
         if (!fecha || !chefId) return;
-
         let cancelled = false;
 
         const fetchSlots = async () => {
@@ -68,11 +67,10 @@ export default function Agendar() {
         setLoading(true);
         setError(null);
         try {
-            const hora = new Date(slotSeleccionado).toTimeString().slice(0, 5);
             await api.post('/sessions', {
                 chefId,
                 fecha,
-                hora,
+                hora: slotSeleccionado,
                 duracionMin: duracion,
                 ...(notas && { notas }),
             });
@@ -85,7 +83,7 @@ export default function Agendar() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-2xl mx-auto">
             <button
                 onClick={() => navigate(-1)}
                 className="inline-flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 mb-6 transition-colors"
@@ -143,21 +141,18 @@ export default function Agendar() {
                             <p className="text-sm text-stone-400 text-center py-4">No hay horarios disponibles para esta fecha.</p>
                         ) : (
                             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                                {slots.map((slot) => {
-                                    const hora = new Date(slot).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                                    return (
-                                        <button
-                                            key={slot}
-                                            onClick={() => setSlotSeleccionado(slot)}
-                                            className={`py-2 rounded-xl text-sm font-medium border-2 transition-all ${slotSeleccionado === slot
+                                {slots.map((slot) => (
+                                    <button
+                                        key={slot}
+                                        onClick={() => setSlotSeleccionado(slot)}
+                                        className={`py-2 rounded-xl text-sm font-medium border-2 transition-all ${slotSeleccionado === slot
                                                 ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
                                                 : 'border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-stone-300'
-                                                }`}
-                                        >
-                                            {hora}
-                                        </button>
-                                    );
-                                })}
+                                            }`}
+                                    >
+                                        {slot}
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -171,8 +166,8 @@ export default function Agendar() {
                                 key={d}
                                 onClick={() => setDuracion(d)}
                                 className={`py-2 rounded-xl text-sm font-medium border-2 transition-all ${duracion === d
-                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                                    : 'border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-stone-300'
+                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                                        : 'border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-stone-300'
                                     }`}
                             >
                                 {d} min

@@ -78,17 +78,19 @@ export default function Navbar({ onMenuClick, menuOpen }: NavbarProps) {
                                         ⭐ Premium
                                     </span>
                                 )}
-                                {usuario?.fotoUrl ? (
-                                    <img
-                                        src={usuario.fotoUrl}
-                                        alt={usuario.nombre}
-                                        className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-stone-200 dark:border-stone-700"
-                                    />
-                                ) : (
-                                    <div className="w-9 h-9 rounded-full bg-stone-900 dark:bg-stone-100 flex items-center justify-center text-amber-200 dark:text-stone-900 font-semibold text-sm flex-shrink-0">
-                                        {usuario?.nombre?.charAt(0).toUpperCase() ?? firebaseUser.email?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
+                                <Link to="/perfil">
+                                    {usuario?.fotoUrl ? (
+                                        <img
+                                            src={usuario.fotoUrl}
+                                            alt={usuario.nombre}
+                                            className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-stone-200 dark:border-stone-700"
+                                        />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-stone-900 dark:bg-stone-100 flex items-center justify-center text-amber-200 dark:text-stone-900 font-semibold text-sm flex-shrink-0">
+                                            {usuario?.nombre?.charAt(0).toUpperCase() ?? firebaseUser.email?.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                </Link>
                                 <button
                                     onClick={handleLogout}
                                     className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"

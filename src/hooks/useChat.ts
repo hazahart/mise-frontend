@@ -55,6 +55,7 @@ export function useChat(chefId: string) {
         await set(chefChatRef, {
             usuarioId: firebaseUser.uid,
             usuarioNombre: usuario.nombre,
+            usuarioFotoUrl: usuario.fotoUrl ?? null,
             ultimoMensaje: texto,
             actualizadoEn: serverTimestamp(),
         });

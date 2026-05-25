@@ -6,8 +6,11 @@ export interface Usuario {
   rol: "free" | "premium" | "chef";
   suscripcionActiva: boolean;
   suscripcionExpira: string | null;
+  suscripcionCancelada: boolean;
   stripeCustomerId: string | null;
   onboardingCompletado: boolean;
+  bio: string | null;
+  especialidad: string | null;
 }
 
 export interface Categoria {

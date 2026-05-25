@@ -13,16 +13,22 @@ import RecetasDelDia from '@/pages/premium/RecetasDelDia';
 import SugeridorIA from './pages/premium/SugeridorIA';
 import Chat from '@/pages/premium/Chat';
 import SeleccionarChef from '@/pages/premium/SeleccionarChef';
-import Onboarding from '@/pages/onboarding/Onboarding';
-import { useAuth } from '@/context/AuthContext';
-import MisChats from './pages/chef/MisChats';
-import ChatChef from './pages/chef/ChatChef';
-import MisSesiones from './pages/premium/MisSesiones';
-import Agendar from './pages/premium/Agendar';
-import SeleccionarChefAgendar from './pages/premium/SeleccionarChefAgendar';
+import MisSesiones from '@/pages/premium/MisSesiones';
+import Agendar from '@/pages/premium/Agendar';
+import SeleccionarChefAgendar from '@/pages/premium/SeleccionarChefAgendar';
 import MisRecetas from '@/pages/chef/MisRecetas';
 import NuevaReceta from '@/pages/chef/NuevaReceta';
 import EditarReceta from '@/pages/chef/EditarReceta';
+import MisChats from '@/pages/chef/MisChats';
+import ChatChef from '@/pages/chef/ChatChef';
+import MisSesionesChef from '@/pages/chef/MisSesioneschef';
+import Perfil from '@/pages/perfil/Perfil';
+import Categorias from '@/pages/categorias/Categorias';
+import Onboarding from '@/pages/onboarding/Onboarding';
+import NotFound from '@/pages/NotFound';
+import { useAuth } from '@/context/AuthContext';
+import Categoria from './pages/categorias/Categoria';
+import MiDisponibilidad from './pages/chef/MiDisponibilidad';
 
 function OnboardingGuard() {
     const { usuario, loading } = useAuth();
@@ -41,12 +47,13 @@ function App() {
             <Route element={<OnboardingGuard />}>
                 <Route element={<Layout />}>
                     <Route path="/" element={<Home />} />
-                    <Route path="/categorias" element={<div className="p-4">Categorías</div>} />
-                    <Route path="/categoria/:id" element={<div className="p-4">Categoría</div>} />
+                    <Route path="/categorias" element={<Categorias />} />
+                    <Route path="/categoria/:id" element={<Categoria />} />
                     <Route path="/receta/:id" element={<RecetaDetalle />} />
                     <Route path="/suscripcion" element={<Subscription />} />
                     <Route path="/suscripcion/exito" element={<SubscriptionSuccess />} />
                     <Route path="/suscripcion/cancelado" element={<SubscriptionCancelled />} />
+                    <Route path="/perfil" element={<Perfil />} />
 
                     <Route element={<PremiumRoute />}>
                         <Route path="/premium/recetas-del-dia" element={<RecetasDelDia />} />
@@ -64,11 +71,13 @@ function App() {
                         <Route path="/chef/editar/:id" element={<EditarReceta />} />
                         <Route path="/chef/mis-chats" element={<MisChats />} />
                         <Route path="/chef/chat/:chatId" element={<ChatChef />} />
+                        <Route path="/chef/mis-sesiones" element={<MisSesionesChef />} />
+                        <Route path="/chef/disponibilidad" element={<MiDisponibilidad />} />
                     </Route>
                 </Route>
             </Route>
 
-            <Route path="*" element={<div className="p-8">404</div>} />
+            <Route path="*" element={<NotFound />} />
         </Routes>
     );
 }

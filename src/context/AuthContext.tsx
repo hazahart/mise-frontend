@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType>({
     firebaseUser: null,
     usuario: null,
     loading: true,
-    refetchUsuario: async () => {},
+    refetchUsuario: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchUsuario = async () => {
         try {
+            await auth.currentUser?.getIdToken(true);
             const data = await api.get<Usuario>("/users/me");
             setUsuario(data);
         } catch {

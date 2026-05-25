@@ -20,6 +20,12 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [uploadingImagen, setUploadingImagen] = useState(false);
     const [imagenPreview, setImagenPreview] = useState<string | null>(recetaInicial?.imagenUrl ?? null);
+    const [nuevaCategoriaMode, setNuevaCategoriaMode] = useState(false);
+    const [nuevaCategoriaNombre, setNuevaCategoriaNombre] = useState('');
+    const [nuevaCategoriaDescripcion, setNuevaCategoriaDescripcion] = useState('');
+    const [nuevaCategoriaImagen, setNuevaCategoriaImagen] = useState<string | null>(null);
+    const [nuevaCategoriaImagenPreview, setNuevaCategoriaImagenPreview] = useState<string | null>(null);
+    const [uploadingCategoriaImagen, setUploadingCategoriaImagen] = useState(false);
 
     const [titulo, setTitulo] = useState(recetaInicial?.titulo ?? '');
     const [descripcion, setDescripcion] = useState(recetaInicial?.descripcion ?? '');
@@ -61,33 +67,44 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
         }
     };
 
-    const agregarIngrediente = () => {
-        setIngredientes(prev => [...prev, { nombre: '', cantidad: '', unidad: '' }]);
+    const handleCategoriaImagenChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !firebaseUser) return;
+        setNuevaCategoriaImagenPreview(URL.createObjectURL(file));
+        setUploadingCategoriaImagen(true);
+        try {
+            const storageRef = ref(storage, `categorias/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            setNuevaCategoriaImagen(url);
+        } catch {
+            setError('No se pudo subir la imagen de la categoría.');
+        } finally {
+            setUploadingCategoriaImagen(false);
+        }
     };
 
-    const eliminarIngrediente = (i: number) => {
-        setIngredientes(prev => prev.filter((_, j) => j !== i));
-    };
-
-    const actualizarIngrediente = (i: number, campo: keyof Ingrediente, valor: string) => {
+    const agregarIngrediente = () => setIngredientes(prev => [...prev, { nombre: '', cantidad: '', unidad: '' }]);
+    const eliminarIngrediente = (i: number) => setIngredientes(prev => prev.filter((_, j) => j !== i));
+    const actualizarIngrediente = (i: number, campo: keyof Ingrediente, valor: string) =>
         setIngredientes(prev => prev.map((ing, j) => j === i ? { ...ing, [campo]: valor } : ing));
-    };
 
-    const agregarPaso = () => {
-        setPasos(prev => [...prev, { orden: prev.length + 1, descripcion: '', tiempoMin: undefined }]);
-    };
-
-    const eliminarPaso = (i: number) => {
-        setPasos(prev => prev.filter((_, j) => j !== i).map((p, j) => ({ ...p, orden: j + 1 })));
-    };
-
-    const actualizarPaso = (i: number, campo: keyof Paso, valor: string | number | undefined) => {
+    const agregarPaso = () => setPasos(prev => [...prev, { orden: prev.length + 1, descripcion: '', tiempoMin: undefined }]);
+    const eliminarPaso = (i: number) => setPasos(prev => prev.filter((_, j) => j !== i).map((p, j) => ({ ...p, orden: j + 1 })));
+    const actualizarPaso = (i: number, campo: keyof Paso, valor: string | number | undefined) =>
         setPasos(prev => prev.map((paso, j) => j === i ? { ...paso, [campo]: valor } : paso));
-    };
 
     const handleSubmit = async () => {
-        if (!titulo.trim() || !descripcion.trim() || !categoriaId) {
-            setError('Título, descripción y categoría son requeridos.');
+        if (!titulo.trim() || !descripcion.trim()) {
+            setError('Título y descripción son requeridos.');
+            return;
+        }
+        if (!nuevaCategoriaMode && !categoriaId) {
+            setError('Selecciona una categoría o crea una nueva.');
+            return;
+        }
+        if (nuevaCategoriaMode && (!nuevaCategoriaNombre.trim() || !nuevaCategoriaDescripcion.trim())) {
+            setError('La nueva categoría requiere nombre y descripción.');
             return;
         }
         if (ingredientes.some(i => !i.nombre.trim())) {
@@ -105,7 +122,16 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
         const payload = {
             titulo,
             descripcion,
-            categoriaId,
+            ...(nuevaCategoriaMode
+                ? {
+                    nuevaCategoria: {
+                        nombre: nuevaCategoriaNombre,
+                        descripcion: nuevaCategoriaDescripcion,
+                        imagenUrl: nuevaCategoriaImagen ?? null,
+                    }
+                }
+                : { categoriaId }
+            ),
             tiempoEstimadoMin,
             dificultad,
             esPremium,
@@ -172,17 +198,58 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Categoría</label>
-                                <select
-                                    value={categoriaId}
-                                    onChange={e => setCategoriaId(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:border-amber-400 dark:focus:border-amber-500"
-                                >
-                                    <option value="">Selecciona una categoría</option>
-                                    {categorias.map(c => (
-                                        <option key={c.id} value={c.id}>{c.nombre}</option>
-                                    ))}
-                                </select>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Categoría</label>
+                                    <button
+                                        onClick={() => setNuevaCategoriaMode(p => !p)}
+                                        className="text-xs text-amber-600 dark:text-amber-400 hover:underline"
+                                    >
+                                        {nuevaCategoriaMode ? 'Seleccionar existente' : '+ Nueva categoría'}
+                                    </button>
+                                </div>
+                                {nuevaCategoriaMode ? (
+                                    <div className="space-y-2">
+                                        <input
+                                            type="text"
+                                            value={nuevaCategoriaNombre}
+                                            onChange={e => setNuevaCategoriaNombre(e.target.value)}
+                                            placeholder="Nombre (ej: Alemana)"
+                                            className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400 dark:focus:border-amber-500"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={nuevaCategoriaDescripcion}
+                                            onChange={e => setNuevaCategoriaDescripcion(e.target.value)}
+                                            placeholder="Descripción breve"
+                                            className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400 dark:focus:border-amber-500"
+                                        />
+                                        <div className="flex items-center gap-3">
+                                            {nuevaCategoriaImagenPreview ? (
+                                                <img src={nuevaCategoriaImagenPreview} alt="Preview" className="w-12 h-12 rounded-xl object-cover border border-stone-200 dark:border-stone-700" />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-xl bg-stone-100 dark:bg-stone-900 border-2 border-dashed border-stone-300 dark:border-stone-600 flex items-center justify-center">
+                                                    <Camera className="w-4 h-4 text-stone-400" />
+                                                </div>
+                                            )}
+                                            <label className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-medium cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors">
+                                                {uploadingCategoriaImagen ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                                                {nuevaCategoriaImagenPreview ? 'Cambiar' : 'Subir imagen'}
+                                                <input type="file" accept="image/*" onChange={handleCategoriaImagenChange} className="hidden" disabled={uploadingCategoriaImagen} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <select
+                                        value={categoriaId}
+                                        onChange={e => setCategoriaId(e.target.value)}
+                                        className="w-full px-4 py-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:border-amber-400 dark:focus:border-amber-500"
+                                    >
+                                        <option value="">Selecciona una categoría</option>
+                                        {categorias.map(c => (
+                                            <option key={c.id} value={c.id}>{c.nombre}</option>
+                                        ))}
+                                    </select>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Tiempo estimado (min)</label>
@@ -224,42 +291,17 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                 <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="font-serif text-lg font-semibold text-stone-800 dark:text-stone-100">Ingredientes</h2>
-                        <button
-                            onClick={agregarIngrediente}
-                            className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
-                        >
+                        <button onClick={agregarIngrediente} className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
                             <Plus className="w-4 h-4" /> Agregar
                         </button>
                     </div>
                     <div className="space-y-3">
                         {ingredientes.map((ing, i) => (
                             <div key={i} className="flex gap-2 items-center">
-                                <input
-                                    type="text"
-                                    value={ing.nombre}
-                                    onChange={e => actualizarIngrediente(i, 'nombre', e.target.value)}
-                                    placeholder="Nombre"
-                                    className="flex-1 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400"
-                                />
-                                <input
-                                    type="text"
-                                    value={ing.cantidad}
-                                    onChange={e => actualizarIngrediente(i, 'cantidad', e.target.value)}
-                                    placeholder="Cantidad"
-                                    className="w-24 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400"
-                                />
-                                <input
-                                    type="text"
-                                    value={ing.unidad}
-                                    onChange={e => actualizarIngrediente(i, 'unidad', e.target.value)}
-                                    placeholder="Unidad"
-                                    className="w-24 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400"
-                                />
-                                <button
-                                    onClick={() => eliminarIngrediente(i)}
-                                    disabled={ingredientes.length === 1}
-                                    className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30"
-                                >
+                                <input type="text" value={ing.nombre} onChange={e => actualizarIngrediente(i, 'nombre', e.target.value)} placeholder="Nombre" className="flex-1 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400" />
+                                <input type="text" value={ing.cantidad} onChange={e => actualizarIngrediente(i, 'cantidad', e.target.value)} placeholder="Cantidad" className="w-24 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400" />
+                                <input type="text" value={ing.unidad} onChange={e => actualizarIngrediente(i, 'unidad', e.target.value)} placeholder="Unidad" className="w-24 px-3 py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-400" />
+                                <button onClick={() => eliminarIngrediente(i)} disabled={ingredientes.length === 1} className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
@@ -270,10 +312,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                 <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="font-serif text-lg font-semibold text-stone-800 dark:text-stone-100">Preparación</h2>
-                        <button
-                            onClick={agregarPaso}
-                            className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
-                        >
+                        <button onClick={agregarPaso} className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors">
                             <Plus className="w-4 h-4" /> Agregar paso
                         </button>
                     </div>
@@ -282,11 +321,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                             <div key={i} className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl p-4">
                                 <div className="flex items-center justify-between mb-2">
                                     <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Paso {paso.orden}</span>
-                                    <button
-                                        onClick={() => eliminarPaso(i)}
-                                        disabled={pasos.length === 1}
-                                        className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30"
-                                    >
+                                    <button onClick={() => eliminarPaso(i)} disabled={pasos.length === 1} className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-30">
                                         <X className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -320,11 +355,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                             <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">Imagen de la receta</label>
                             <div className="flex items-center gap-4">
                                 {imagenPreview ? (
-                                    <img
-                                        src={imagenPreview}
-                                        alt="Preview"
-                                        className="w-24 h-24 rounded-xl object-cover border-2 border-stone-200 dark:border-stone-700"
-                                    />
+                                    <img src={imagenPreview} alt="Preview" className="w-24 h-24 rounded-xl object-cover border-2 border-stone-200 dark:border-stone-700" />
                                 ) : (
                                     <div className="w-24 h-24 rounded-xl bg-stone-100 dark:bg-stone-900 border-2 border-dashed border-stone-300 dark:border-stone-600 flex items-center justify-center">
                                         <Camera className="w-6 h-6 text-stone-400" />
@@ -337,10 +368,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                                         <input type="file" accept="image/*" onChange={handleImagenChange} className="hidden" disabled={uploadingImagen} />
                                     </label>
                                     {imagenPreview && (
-                                        <button
-                                            onClick={() => { setImagenPreview(null); setImagenUrl(''); }}
-                                            className="text-xs text-red-400 hover:text-red-600 transition-colors"
-                                        >
+                                        <button onClick={() => { setImagenPreview(null); setImagenUrl(''); }} className="text-xs text-red-400 hover:text-red-600 transition-colors">
                                             Eliminar imagen
                                         </button>
                                     )}
@@ -376,7 +404,7 @@ export default function FormularioReceta({ recetaInicial, modo }: FormularioRece
                 </button>
                 <button
                     onClick={handleSubmit}
-                    disabled={loading || uploadingImagen}
+                    disabled={loading || uploadingImagen || uploadingCategoriaImagen}
                     className="flex-1 py-3 bg-stone-900 dark:bg-amber-500 text-white dark:text-stone-900 rounded-2xl font-medium text-sm hover:bg-stone-800 dark:hover:bg-amber-400 transition-colors disabled:opacity-50"
                 >
                     {loading ? 'Guardando...' : modo === 'crear' ? 'Publicar receta' : 'Guardar cambios'}

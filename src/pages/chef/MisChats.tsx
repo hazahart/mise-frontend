@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { ref, onValue, off } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { api } from '@/lib/api';
 import { MessageSquare, Loader2 } from 'lucide-react';
 
 interface ChatResumen {
     chatId: string;
     usuarioId: string;
     usuarioNombre: string;
+    usuarioFotoUrl: string | null;
     ultimoMensaje: string;
     actualizadoEn: number;
 }
@@ -23,18 +25,31 @@ export default function MisChats() {
 
         const chatsRef = ref(rtdb, `chef_chats/${firebaseUser.uid}`);
 
-        onValue(chatsRef, (snapshot) => {
+        onValue(chatsRef, async (snapshot) => {
             const data = snapshot.val();
             if (!data) {
                 setChats([]);
-            } else {
-                const lista = Object.entries(data).map(([chatId, val]) => ({
-                    chatId,
-                    ...(val as Omit<ChatResumen, 'chatId'>),
-                }));
-                lista.sort((a, b) => b.actualizadoEn - a.actualizadoEn);
-                setChats(lista);
+                setLoading(false);
+                return;
             }
+
+            const lista = await Promise.all(
+                Object.entries(data).map(async ([chatId, val]) => {
+                    const chat = val as Omit<ChatResumen, 'chatId'>;
+                    if (!chat.usuarioFotoUrl && chat.usuarioId) {
+                        try {
+                            const usuario = await api.get<{ fotoUrl: string | null }>(`/users/${chat.usuarioId}`);
+                            chat.usuarioFotoUrl = usuario.fotoUrl;
+                        } catch {
+                            chat.usuarioFotoUrl = null;
+                        }
+                    }
+                    return { chatId, ...chat };
+                })
+            );
+
+            lista.sort((a, b) => b.actualizadoEn - a.actualizadoEn);
+            setChats(lista);
             setLoading(false);
         });
 
@@ -73,9 +88,17 @@ export default function MisChats() {
                             to={`/chef/chat/${chat.chatId}`}
                             className="flex items-center gap-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 hover:border-amber-300 dark:hover:border-amber-700 transition-all hover:shadow-md"
                         >
-                            <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-lg flex-shrink-0">
-                                {chat.usuarioNombre.charAt(0).toUpperCase()}
-                            </div>
+                            {chat.usuarioFotoUrl ? (
+                                <img
+                                    src={chat.usuarioFotoUrl}
+                                    alt={chat.usuarioNombre}
+                                    className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-stone-200 dark:border-stone-700"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-lg flex-shrink-0">
+                                    {chat.usuarioNombre.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-stone-900 dark:text-stone-100">{chat.usuarioNombre}</p>
                                 <p className="text-sm text-stone-400 truncate">{chat.ultimoMensaje}</p>

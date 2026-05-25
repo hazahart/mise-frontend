@@ -167,7 +167,26 @@ export default function RecetaDetalle() {
           <span className="text-sm font-medium">Verificado</span>
         </div>
       </div>
-
+      {receta.videoUrl && (() => {
+        const match = receta.videoUrl.match(/(?:youtu\.be\/|watch\?v=|embed\/)([^#&?]*)/);
+        const videoId = match?.[1];
+        return videoId ? (
+          <div className="mb-8">
+            <h3 className="font-serif text-xl font-semibold text-stone-800 dark:text-stone-100 mb-4 border-b border-stone-200 dark:border-stone-700 pb-3">
+              Video de la receta
+            </h3>
+            <div className="rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-700">
+              <iframe
+                className="w-full h-[400px]"
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title="Video de receta"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }

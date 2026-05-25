@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Grid2X2, Star, Sparkles, MessageSquare, Calendar, ChefHat, PenSquare, X, Users } from 'lucide-react';
+import { Home, Grid2X2, Star, Sparkles, MessageSquare, Calendar, ChefHat, PenSquare, X, Users, User, Clock } from 'lucide-react';
 
 interface SidebarProps {
     open: boolean;
@@ -89,6 +89,20 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                     </NavLink>
                     <NavLink to="/chef/mis-sesiones" className={linkClass} onClick={onClose}>
                         <Users className="w-4 h-4" /> Mis sesiones
+                    </NavLink>
+                    <NavLink to="/chef/disponibilidad" className={linkClass} onClick={onClose}>
+                        <Clock className="w-4 h-4" /> Mi disponibilidad
+                    </NavLink>
+                </>
+            )}
+
+            {usuario && (
+                <>
+                    <p className="text-xs font-medium text-stone-400 uppercase tracking-widest px-3 pb-2 pt-4">
+                        Cuenta
+                    </p>
+                    <NavLink to="/perfil" className={linkClass} onClick={onClose}>
+                        <User className="w-4 h-4" /> Mi perfil
                     </NavLink>
                 </>
             )}
