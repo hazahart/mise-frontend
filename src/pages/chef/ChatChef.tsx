@@ -1,30 +1,65 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useChat } from '@/hooks/useChat';
+import { ref, push, onValue, off, serverTimestamp, set } from 'firebase/database';
+import { rtdb } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/lib/api';
 import { ArrowLeft, Send, Loader2 } from 'lucide-react';
 
-interface Chef {
+interface Mensaje {
     id: string;
-    nombre: string;
-    especialidad: string | null;
-    fotoUrl: string | null;
+    texto: string;
+    autorId: string;
+    autorNombre: string;
+    creadoEn: number;
 }
 
-export default function Chat() {
-    const { chefId } = useParams<{ chefId: string }>();
-    const { firebaseUser } = useAuth();
-    const { mensajes, loading, enviarMensaje } = useChat(chefId ?? '');
+interface UsuarioInfo {
+    fotoUrl: string | null;
+    nombre: string;
+}
+
+export default function ChatChef() {
+    const { chatId } = useParams<{ chatId: string }>();
+    const { usuario, firebaseUser } = useAuth();
+    const [mensajes, setMensajes] = useState<Mensaje[]>([]);
+    const [loading, setLoading] = useState(true);
     const [texto, setTexto] = useState('');
     const [enviando, setEnviando] = useState(false);
-    const [chef, setChef] = useState<Chef | null>(null);
+    const [usuarioInfo, setUsuarioInfo] = useState<UsuarioInfo | null>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
 
+    const usuarioDelChat = mensajes.find(m => m.autorId !== firebaseUser?.uid);
+
     useEffect(() => {
-        if (!chefId) return;
-        api.get<Chef>(`/chefs/${chefId}`).then(setChef).catch(() => null);
-    }, [chefId]);
+        if (!usuarioDelChat) return;
+        api.get<UsuarioInfo>(`/users/${usuarioDelChat.autorId}`)
+            .then(data => setUsuarioInfo(data))
+            .catch(() => null);
+    }, [usuarioDelChat]);
+
+    useEffect(() => {
+        if (!chatId) return;
+
+        const mensajesRef = ref(rtdb, `chats/${chatId}/messages`);
+
+        onValue(mensajesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                setMensajes([]);
+            } else {
+                const lista = Object.entries(data).map(([id, val]) => ({
+                    id,
+                    ...(val as Omit<Mensaje, 'id'>),
+                }));
+                lista.sort((a, b) => a.creadoEn - b.creadoEn);
+                setMensajes(lista);
+            }
+            setLoading(false);
+        });
+
+        return () => off(mensajesRef);
+    }, [chatId]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,44 +67,60 @@ export default function Chat() {
 
     const handleEnviar = async () => {
         const msg = texto.trim();
-        if (!msg || enviando) return;
+        if (!msg || enviando || !chatId || !firebaseUser || !usuario) return;
         setTexto('');
         setEnviando(true);
-        await enviarMensaje(msg);
-        setEnviando(false);
+
+        try {
+            const mensajesRef = ref(rtdb, `chats/${chatId}/messages`);
+            await push(mensajesRef, {
+                texto: msg,
+                autorId: firebaseUser.uid,
+                autorNombre: usuario.nombre,
+                creadoEn: serverTimestamp(),
+            });
+
+            const chefChatRef = ref(rtdb, `chef_chats/${firebaseUser.uid}/${chatId}`);
+            await set(chefChatRef, {
+                usuarioId: chatId.split('_')[0],
+                usuarioNombre: usuarioDelChat?.autorNombre ?? 'Usuario',
+                ultimoMensaje: msg,
+                actualizadoEn: serverTimestamp(),
+            });
+        } finally {
+            setEnviando(false);
+        }
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex flex-col h-[calc(100vh-8rem)] overflow-hidden">
 
             <div className="flex items-center gap-4 mb-4 pb-4 border-b border-stone-200 dark:border-stone-700">
                 <Link
-                    to="/premium/chat"
+                    to="/chef/mis-chats"
                     className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                {chef && (
-                    <div className="flex items-center gap-3">
-                        {chef.fotoUrl ? (
-                            <img
-                                src={chef.fotoUrl}
-                                alt={chef.nombre}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-stone-200 dark:border-stone-700"
-                            />
-                        ) : (
-                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-sm">
-                                {chef.nombre.charAt(0)}
-                            </div>
-                        )}
-                        <div>
-                            <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm">{chef.nombre}</p>
-                            {chef.especialidad && (
-                                <p className="text-xs text-stone-400">{chef.especialidad}</p>
-                            )}
+                <div className="flex items-center gap-3">
+                    {usuarioInfo?.fotoUrl ? (
+                        <img
+                            src={usuarioInfo.fotoUrl}
+                            alt={usuarioInfo.nombre}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-stone-200 dark:border-stone-700"
+                        />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400 font-bold text-sm">
+                            {usuarioDelChat?.autorNombre?.charAt(0).toUpperCase() ?? '?'}
                         </div>
+                    )}
+                    <div>
+                        <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm">
+                            {usuarioDelChat?.autorNombre ?? 'Usuario'}
+                        </p>
+                        <p className="text-xs text-stone-400">Usuario</p>
                     </div>
-                )}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
@@ -79,10 +130,7 @@ export default function Chat() {
                     </div>
                 ) : mensajes.length === 0 ? (
                     <div className="flex items-center justify-center h-full text-center">
-                        <div>
-                            <p className="text-stone-400 text-sm">No hay mensajes aún.</p>
-                            <p className="text-stone-400 text-sm">¡Inicia la conversación!</p>
-                        </div>
+                        <p className="text-stone-400 text-sm">No hay mensajes aún.</p>
                     </div>
                 ) : (
                     mensajes.map((msg) => {
