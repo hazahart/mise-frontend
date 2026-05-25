@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# Mise — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz web para la plataforma de recetas de cocina Mise. Construida con React, Vite y TailwindCSS.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Framework:** React 19
+- **Build tool:** Vite
+- **Lenguaje:** TypeScript
+- **Estilos:** TailwindCSS v4
+- **Animaciones:** Framer Motion
+- **Routing:** React Router v7
+- **Estado servidor:** TanStack Query
+- **Autenticación:** Firebase SDK
+- **Tiempo real:** Firebase Realtime Database
+- **Deploy:** Vercel
 
-## React Compiler
+## Producción
+https://miseapp-lime.vercel.app
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Páginas
 
-## Expanding the ESLint configuration
+| Ruta | Descripción | Acceso |
+|------|-------------|--------|
+| `/` | Home — catálogo de recetas | Público |
+| `/registro` | Registro de usuario | Público |
+| `/login` | Inicio de sesión | Público |
+| `/onboarding` | Configuración inicial de perfil | Autenticado |
+| `/categorias` | Listado de categorías | Público |
+| `/categoria/:id` | Recetas por categoría | Público |
+| `/receta/:id` | Detalle de receta | Público |
+| `/suscripcion` | Planes de suscripción | Público |
+| `/perfil` | Perfil de usuario | Autenticado |
+| `/premium/recetas-del-dia` | Recetas destacadas del día | Premium |
+| `/premium/sugeridor` | Sugeridor de recetas con IA | Premium |
+| `/premium/chat` | Seleccionar chef para chatear | Premium |
+| `/premium/chat/:chefId` | Chat en tiempo real con chef | Premium |
+| `/premium/mis-sesiones` | Mis sesiones agendadas | Premium |
+| `/premium/agendar` | Seleccionar chef para agendar | Premium |
+| `/premium/agendar/:chefId` | Agendar sesión con chef | Premium |
+| `/chef/mis-recetas` | Panel de recetas del chef | Chef |
+| `/chef/nueva-receta` | Crear nueva receta | Chef |
+| `/chef/editar/:id` | Editar receta | Chef |
+| `/chef/mis-chats` | Conversaciones con usuarios | Chef |
+| `/chef/chat/:chatId` | Chat con usuario específico | Chef |
+| `/chef/mis-sesiones` | Sesiones agendadas por usuarios | Chef |
+| `/chef/disponibilidad` | Configurar horarios disponibles | Chef |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Variables de entorno
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_DATABASE_URL=
+VITE_BACKEND_URL=http://localhost:3000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Instalación local
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/hazahart/mise-frontend
+cd mise-frontend
+npm install
+cp .env.example .env
+npm run dev
 ```
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```
+
+## Funcionalidades principales
+
+- **Autenticación** — Registro, login y onboarding multi-paso con Firebase Auth
+- **Catálogo** — Exploración de recetas por categoría con selector de porciones
+- **Premium** — Recetas exclusivas, sugeridor IA con Gemini, chat en tiempo real
+- **Sesiones** — Agendamiento de sesiones 1:1 con chefs profesionales
+- **Panel Chef** — Gestión completa de recetas y disponibilidad
+- **Suscripción** — Planes mensual y anual con Stripe Checkout
+- **Tema** — Soporte de modo claro y oscuro
+
+## Autores
+
+- **Gustavo Ramírez Mireles** — [Hazahart](https://github.com/hazahart)
+- **Vanessa Fernanda Arreola Garcia** — [VanessaFAG](https://github.com/VanessaFAG)
+
+**Materia:** Tópicos Avanzados de Desarrollo Web  
+**Institución:** TECNM en Celaya
