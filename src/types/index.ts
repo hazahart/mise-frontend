@@ -6,7 +6,11 @@ export interface Usuario {
   rol: "free" | "premium" | "chef";
   suscripcionActiva: boolean;
   suscripcionExpira: string | null;
+  suscripcionCancelada: boolean;
   stripeCustomerId: string | null;
+  onboardingCompletado: boolean;
+  bio: string | null;
+  especialidad: string | null;
 }
 
 export interface Categoria {
@@ -49,4 +53,21 @@ export interface Receta extends RecetaResumen {
   ingredientes: Ingrediente[];
   pasos: Paso[];
   videoUrl?: string;
+}
+
+export type EstadoSesion = 'pendiente' | 'confirmada' | 'cancelada' | 'completada';
+
+export interface Sesion {
+  id: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  chefId: string;
+  chefNombre: string;
+  fecha: string;
+  hora: string;
+  duracionMin: number;
+  estado: EstadoSesion;
+  notas?: string;
+  creadoEn: string;
+  actualizadoEn: string;
 }

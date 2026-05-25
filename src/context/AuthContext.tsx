@@ -4,12 +4,12 @@ import {
     useEffect,
     useState,
 } from "react";
-import type {ReactNode} from "react";
-import {onAuthStateChanged} from "firebase/auth";
-import type {User} from "firebase/auth";
-import {auth} from "@/lib/firebase";
-import {api} from "@/lib/api";
-import type {Usuario} from "@/types";
+import type { ReactNode } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import type { User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { api } from "@/lib/api";
+import type { Usuario } from "@/types";
 
 interface AuthContextType {
     firebaseUser: User | null;
@@ -22,17 +22,17 @@ const AuthContext = createContext<AuthContextType>({
     firebaseUser: null,
     usuario: null,
     loading: true,
-    refetchUsuario: async () => {
-    },
+    refetchUsuario: async () => { },
 });
 
-export function AuthProvider({children}: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
     const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [loading, setLoading] = useState(true);
 
     const fetchUsuario = async () => {
         try {
+            await auth.currentUser?.getIdToken(true);
             const data = await api.get<Usuario>("/users/me");
             setUsuario(data);
         } catch {

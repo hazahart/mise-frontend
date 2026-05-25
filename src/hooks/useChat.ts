@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ref, push, onValue, off, serverTimestamp } from 'firebase/database';
+import { ref, push, onValue, off, serverTimestamp, set } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -49,6 +49,15 @@ export function useChat(chefId: string) {
             autorId: firebaseUser.uid,
             autorNombre: usuario.nombre,
             creadoEn: serverTimestamp(),
+        });
+
+        const chefChatRef = ref(rtdb, `chef_chats/${chefId}/${chatId}`);
+        await set(chefChatRef, {
+            usuarioId: firebaseUser.uid,
+            usuarioNombre: usuario.nombre,
+            usuarioFotoUrl: usuario.fotoUrl ?? null,
+            ultimoMensaje: texto,
+            actualizadoEn: serverTimestamp(),
         });
     };
 
