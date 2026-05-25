@@ -9,22 +9,23 @@ export const useReceta = (id: string | undefined) => {
 
   useEffect(() => {
     if (!id) return;
-
     let cancelled = false;
 
     const fetchReceta = async () => {
       try {
         const data = await api.get<Receta>(`/recipes/${id}`);
         if (!cancelled) setReceta(data);
-      } catch {
-        if (!cancelled) setError('No se pudo cargar la receta.');
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const e = err as { code?: string };
+          setError(e.code === 'forbidden' ? 'forbidden' : 'error');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
     fetchReceta();
-
     return () => { cancelled = true; };
   }, [id]);
 

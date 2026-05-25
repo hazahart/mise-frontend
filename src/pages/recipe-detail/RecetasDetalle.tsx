@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useReceta } from '../../hooks/useReceta';
 import { Clock, ChefHat, Users, ArrowLeft, Lock, CheckCircle, Minus, Plus } from 'lucide-react';
 import placeholderReceta from '../../assets/recipe/placeholder-recipe.jpg';
@@ -12,8 +12,15 @@ const DIFICULTAD_ESTILOS = {
 
 export default function RecetaDetalle() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { receta, loading, error } = useReceta(id);
   const [porciones, setPorciones] = useState(1);
+
+  useEffect(() => {
+    if (error === 'forbidden') {
+      navigate('/suscripcion', { replace: true });
+    }
+  }, [error, navigate]);
 
   if (loading) {
     return (
@@ -26,7 +33,7 @@ export default function RecetaDetalle() {
     );
   }
 
-  if (error || !receta) {
+  if (error === 'error' || !receta) {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
         <p className="text-stone-500 dark:text-stone-400 text-lg mb-4">No se pudo cargar la receta.</p>
@@ -39,7 +46,6 @@ export default function RecetaDetalle() {
 
   return (
     <div className="max-w-4xl mx-auto">
-
       <Link
         to="/"
         className="inline-flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 mb-6 transition-colors"
@@ -167,6 +173,7 @@ export default function RecetaDetalle() {
           <span className="text-sm font-medium">Verificado</span>
         </div>
       </div>
+
       {receta.videoUrl && (() => {
         const match = receta.videoUrl.match(/(?:youtu\.be\/|watch\?v=|embed\/)([^#&?]*)/);
         const videoId = match?.[1];
