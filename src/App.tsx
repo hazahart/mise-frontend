@@ -17,6 +17,9 @@ import Onboarding from '@/pages/onboarding/Onboarding';
 import { useAuth } from '@/context/AuthContext';
 import MisChats from './pages/chef/MisChats';
 import ChatChef from './pages/chef/ChatChef';
+import MisSesiones from './pages/premium/MisSesiones';
+import Agendar from './pages/premium/Agendar';
+import SeleccionarChefAgendar from './pages/premium/SeleccionarChefAgendar';
 
 function OnboardingGuard() {
     const { usuario, loading } = useAuth();
@@ -47,7 +50,9 @@ function App() {
                         <Route path="/premium/sugeridor" element={<SugeridorIA />} />
                         <Route path="/premium/chat" element={<SeleccionarChef />} />
                         <Route path="/premium/chat/:chefId" element={<Chat />} />
-                        <Route path="/premium/mis-sesiones" element={<div className="p-4">Mis sesiones</div>} />
+                        <Route path="/premium/mis-sesiones" element={<MisSesiones />} />
+                        <Route path="/premium/agendar" element={<SeleccionarChefAgendar />} />
+                        <Route path="/premium/agendar/:chefId" element={<Agendar />} />
                     </Route>
 
                     <Route element={<ChefRoute />}>
